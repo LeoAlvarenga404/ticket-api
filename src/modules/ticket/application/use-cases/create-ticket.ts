@@ -3,6 +3,7 @@ import { TicketRepository } from '../../domain/ticket.repository';
 import { Ticket } from '../../domain/ticket.entity';
 
 type CreateTicketUseCaseRequest = {
+  tenantId: string;
   title: string;
   description: string;
 };
@@ -18,10 +19,12 @@ export class CreateTicketUseCase {
   constructor(private readonly TicketRepository: TicketRepository) {}
 
   async execute({
+    tenantId,
     title,
     description,
   }: CreateTicketUseCaseRequest): Promise<CreateTicketUseCaseResponse> {
     const ticket = Ticket.create({
+      tenantId,
       title,
       description,
     });
