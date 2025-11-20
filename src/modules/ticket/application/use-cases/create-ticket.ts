@@ -1,6 +1,6 @@
-import { Either, right } from 'src/core/either';
-import { TicketRepository } from '../../domain/ticket.repository';
-import { Ticket } from '../../domain/ticket.entity';
+import { Either, right } from '@/core/either';
+import { TicketRepository } from '@/modules/ticket/domain/repositories/ticket.repository';
+import { Ticket } from '@/modules/ticket/domain/entities/ticket';
 
 type CreateTicketUseCaseRequest = {
   tenantId: string;

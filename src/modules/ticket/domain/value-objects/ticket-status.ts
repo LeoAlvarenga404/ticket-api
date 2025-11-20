@@ -1,26 +1,46 @@
+import { Either, left, right } from '@/core/either';
 import { ValueObject } from '@/core/entities/value-object';
+import { InvalidTransitionError } from '@/core/errors/invalid-transition.error';
 
-export type RawStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type StatusProps =
+  | 'open'
+  | 'in_progress'
+  | 'on_hold'
+  | 'resolved'
+  | 'closed';
 
 interface TicketStatusProps {
-  value: RawStatus;
+  value: StatusProps;
 }
 
 export class TicketStatus extends ValueObject<TicketStatusProps> {
-  get value(): RawStatus {
+  private static TRANSITIONS: Record<StatusProps, StatusProps[]> = {
+    open: ['in_progress', 'closed'],
+    in_progress: ['resolved', 'open', 'closed', 'on_hold'],
+    on_hold: ['resolved', 'in_progress', 'closed'],
+    resolved: ['closed', 'open'],
+    closed: [],
+  };
+
+  get value(): StatusProps {
     return this.props.value;
   }
 
-  static create(value: RawStatus) {
+  static create(value: StatusProps) {
     return new TicketStatus({ value });
   }
 
-  transitionTo(_value: RawStatus): TicketStatus {
-    return TicketStatus.create(_value);
+  canTransitionTo(target: StatusProps): boolean {
+    return TicketStatus.TRANSITIONS[this.value].includes(target);
   }
 
-  canTransitionTo(_value: string): boolean {
-    return false;
+  transitionTo(
+    target: StatusProps,
+  ): Either<InvalidTransitionError, TicketStatus> {
+    if (!this.canTransitionTo(target)) {
+      return left(new InvalidTransitionError());
+    }
+    return right(TicketStatus.create(target));
   }
 
   isClosed() {
@@ -28,6 +48,6 @@ export class TicketStatus extends ValueObject<TicketStatusProps> {
   }
 
   isActive() {
-    return ['open', 'in_progress'].includes(this.value);
+    return ['open', 'in_progress', 'on_hold'].includes(this.value);
   }
 }
