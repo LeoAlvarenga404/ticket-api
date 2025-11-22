@@ -4,7 +4,6 @@ import { Permission } from '../../domain/value-objects/agent-role';
 import { UnauthorizedError } from '@/core/errors/unauthorized.error';
 
 export class PermissionGuard {
-    
   static check(
     agent: Agent,
     permission: Permission,
@@ -15,5 +14,4 @@ export class PermissionGuard {
 
     return right(undefined);
   }
-
 }

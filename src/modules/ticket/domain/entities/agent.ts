@@ -51,6 +51,10 @@ export class Agent extends TenantEntity<AgentProps> {
     this.touch();
   }
 
+  get isActive() {
+    return this.props.status === 'active';
+  }
+
   set email(email: string) {
     this.props.email = email;
     this.touch();

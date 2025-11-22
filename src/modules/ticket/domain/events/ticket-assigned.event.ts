@@ -9,7 +9,7 @@ export class TicketAssignedEvent implements DomainEvent {
   constructor(
     public readonly ticket: Ticket,
     public readonly agent: Agent,
-    public readonly assignedBy?: Agent,
+    public readonly assignedBy?: string,
   ) {
     this.occurredAt = new Date();
   }

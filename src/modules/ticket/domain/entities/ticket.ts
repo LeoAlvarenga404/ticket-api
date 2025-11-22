@@ -9,14 +9,22 @@ import { InvalidTransitionError } from '@/core/errors/invalid-transition.error';
 import { DomainEvent } from '@/core/events/domain-event';
 import { TicketCreatedEvent } from '../events/ticket-created.event';
 import { Customer } from './customer';
+import { Agent } from './agent';
+import { TenantMismatchError } from '@/core/errors/tenant-mismatch.error';
+import { InactiveAgentError } from '@/core/errors/inactive-agent.error';
+import { TicketAssignedEvent } from '../events/ticket-assigned.event';
+import { MessageAddedEvent } from '../events/message-added.event';
 
 export interface TicketProps {
   tenantId: string;
   subject: string;
-  reporterEmail: Customer;
+  customerId: string;
+  reporterEmail: string;
   status: TicketStatus;
   replyAddress: EmailReplyAddress;
   messageCount: number;
+  assigneeId?: string;
+  assignedAt?: Date;
   lastMessageAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
@@ -54,6 +62,14 @@ export class Ticket extends TenantEntity<TicketProps> {
     return this.props.messageCount;
   }
 
+  get assigneeId() {
+    return this.props.assignedAt;
+  }
+
+  get isAssigned(): boolean {
+    return !!this.props.assigneeId;
+  }
+
   get lastMessageAt() {
     return this.props.lastMessageAt;
   }
@@ -69,18 +85,41 @@ export class Ticket extends TenantEntity<TicketProps> {
     return this._domainEvents;
   }
 
+  private touch() {
+    this.props.updatedAt = new Date();
+  }
   clearEvents() {
     this._domainEvents = [];
   }
+  assignTo(
+    agent: Agent,
+  ): Either<TenantMismatchError | InactiveAgentError, void> {
+    if (agent.tenantId !== this.tenantId) {
+      return left(new TenantMismatchError());
+    }
 
-  private touch() {
-    this.props.updatedAt = new Date();
+    if (!agent.isActive) {
+      return left(new InactiveAgentError());
+    }
+
+    const previousAssignee = this.props.assigneeId
+
+    this.props.assigneeId = agent.id.toString();
+    this.props.assignedAt = new Date();
+    this.touch();
+
+    this._domainEvents.push(
+      new TicketAssignedEvent(this, agent, previousAssignee)
+    )
+
+    return right(undefined)
   }
 
   addMessage(
     content: string,
     author: MessageAuthor,
   ): Either<TickedClosedError, Message> {
+
     if (this.status.isClosed()) {
       return left(new TickedClosedError());
     }
@@ -95,8 +134,11 @@ export class Ticket extends TenantEntity<TicketProps> {
 
     this._messages.push(message);
     this.props.messageCount++;
+
     this.props.lastMessageAt = new Date();
     this.touch();
+
+    this._domainEvents.push(new MessageAddedEvent(this, message))
 
     return right(message);
   }
