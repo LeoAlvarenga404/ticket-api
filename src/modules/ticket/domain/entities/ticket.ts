@@ -8,11 +8,12 @@ import { TickedClosedError } from '@/core/errors/ticket-closed.error';
 import { InvalidTransitionError } from '@/core/errors/invalid-transition.error';
 import { DomainEvent } from '@/core/events/domain-event';
 import { TicketCreatedEvent } from '../events/ticket-created.event';
+import { Customer } from './customer';
 
 export interface TicketProps {
   tenantId: string;
   subject: string;
-  reporterEmail: string;
+  reporterEmail: Customer;
   status: TicketStatus;
   replyAddress: EmailReplyAddress;
   messageCount: number;
@@ -22,7 +23,7 @@ export interface TicketProps {
 }
 
 export interface MessageAuthor {
-  id?: string;
+  id: string;
   type: 'reporter' | 'agent' | 'system';
 }
 

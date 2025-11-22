@@ -6,6 +6,7 @@ export type StatusProps =
   | 'open'
   | 'in_progress'
   | 'on_hold'
+  | 'awaiting_customer'
   | 'resolved'
   | 'closed';
 
@@ -15,9 +16,10 @@ interface TicketStatusProps {
 
 export class TicketStatus extends ValueObject<TicketStatusProps> {
   private static TRANSITIONS: Record<StatusProps, StatusProps[]> = {
-    open: ['in_progress', 'closed'],
-    in_progress: ['resolved', 'open', 'closed', 'on_hold'],
-    on_hold: ['resolved', 'in_progress', 'closed'],
+    open: ['in_progress', 'closed', 'awaiting_customer'],
+    in_progress: ['resolved', 'open', 'closed', 'on_hold', 'awaiting_customer'],
+    awaiting_customer: ['in_progress', 'closed', 'resolved', 'on_hold'],
+    on_hold: ['resolved', 'in_progress', 'closed', 'awaiting_customer'],
     resolved: ['closed', 'open'],
     closed: [],
   };

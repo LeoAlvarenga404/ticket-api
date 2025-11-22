@@ -48,7 +48,7 @@ export class CreateTicketFromEmailUseCase {
     );
 
     const message = ticket.addMessage(bodyPlain, {
-      id: undefined,
+      id: '',
       type: 'reporter',
     });
 

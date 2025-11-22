@@ -12,28 +12,28 @@ export interface EmailHeadersProps {
 
 export class EmailHeaders extends ValueObject<EmailHeadersProps> {
   get messageId() {
-    return '';
+    return this.props.messageId;
   }
   get inReplyTo() {
-    return '';
+    return this.props.inReplyTo;
   }
   get references() {
-    return [];
+    return this.props.references ?? [];
   }
   get from() {
-    return '';
+    return this.props.from;
   }
   get to() {
-    return [];
+    return this.props.to;
   }
   get subject() {
-    return '';
+    return this.props.subject;
   }
   get date() {
-    return '';
+    return this.props.date;
   }
 
-  static create(_props: EmailHeadersProps): EmailHeaders {
-    return new EmailHeaders({});
+  static create(props: EmailHeadersProps): EmailHeaders {
+    return new EmailHeaders(props);
   }
 }

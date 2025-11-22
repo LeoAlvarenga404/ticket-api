@@ -2,14 +2,19 @@ import { Entity } from '@/core/entities/entity';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import { EmailHeaders } from '../value-objects/email-headers';
 
+interface Attachment {}
+
 export interface MessageProps {
   ticketId: string;
   providerMessageId?: string;
   authorType: 'reporter' | 'agent' | 'system';
-  authorId?: string;
+  authorId: string;
   bodyRaw?: string;
   bodyPlain: string;
   headers?: EmailHeaders | null;
+  attachments?: Attachment[];
+  editedAt?: Date;
+  mentions?: string[]; // agent ids
   direction: 'inbound' | 'outbound';
   createdAt: Date;
 }
@@ -39,25 +44,38 @@ export class Message extends Entity<MessageProps> {
   get direction() {
     return this.props.direction;
   }
+
+  get attachments() {
+    return this.props.attachments;
+  }
+  get mentions() {
+    return this.props.mentions;
+  }
+
   get createdAt() {
     return this.props.createdAt;
   }
 
   linkProviderMessageId(providerId: string) {
-    this.props.providerMessageId = providerId
+    this.props.providerMessageId = providerId;
   }
 
   static create(_props: MessageProps, id?: UniqueEntityID) {
-    return new Message({
-      ticketId: _props.ticketId,
-      authorType: _props.authorType ?? 'reporter',
-      authorId: _props.authorId,
-      bodyRaw: _props.bodyRaw,
-      bodyPlain: _props.bodyPlain,
-      headers: (_props.headers ?? null) as EmailHeaders | null,
-      direction: _props.direction,
-      providerMessageId: _props.providerMessageId,
-      createdAt: _props.createdAt ?? new Date(),
-     }, id);
+    return new Message(
+      {
+        ticketId: _props.ticketId,
+        authorType: _props.authorType ?? 'reporter',
+        authorId: _props.authorId,
+        bodyRaw: _props.bodyRaw,
+        bodyPlain: _props.bodyPlain,
+        headers: (_props.headers ?? null) as EmailHeaders | null,
+        direction: _props.direction,
+        providerMessageId: _props.providerMessageId,
+        attachments: _props.attachments ?? [],
+        mentions: _props.mentions ?? [],
+        createdAt: _props.createdAt ?? new Date(),
+      },
+      id,
+    );
   }
 }

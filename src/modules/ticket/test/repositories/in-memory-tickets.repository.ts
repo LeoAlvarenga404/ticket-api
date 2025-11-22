@@ -1,4 +1,4 @@
-import { Ticket } from '../../domain/ticket.entity';
+import { Ticket } from '../../domain/entities/ticket';
 import { TicketRepository } from '../../domain/repositories/ticket.repository';
 
 export class InMemoryTicketsRepository implements TicketRepository {
