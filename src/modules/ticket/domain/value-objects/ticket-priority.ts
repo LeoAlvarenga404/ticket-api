@@ -1,10 +1,10 @@
 import { right } from '@/core/either';
 import { ValueObject } from '@/core/entities/value-object';
 
-type PriorityProps = 'low' | 'medium' | 'high' | 'urgent' | 'emergency';
+type PriorityLevel = 'low' | 'medium' | 'high' | 'urgent';
 
 interface TicketPriorityProps {
-  value: PriorityProps;
+  value: PriorityLevel;
 }
 
 interface SLAProps {
@@ -13,7 +13,7 @@ interface SLAProps {
 }
 
 export class TicketPriority extends ValueObject<TicketPriorityProps> {
-  private static SLA: Record<PriorityProps, SLAProps> = {
+  private static SLA: Record<PriorityLevel, SLAProps> = {
     low: {
       response_time: '24h',
       solution_time: '3d',
@@ -30,10 +30,6 @@ export class TicketPriority extends ValueObject<TicketPriorityProps> {
       response_time: '1h',
       solution_time: '4h',
     },
-    emergency: {
-      response_time: '10m',
-      solution_time: '2h',
-    },
   };
 
   get value() {
@@ -46,5 +42,9 @@ export class TicketPriority extends ValueObject<TicketPriorityProps> {
 
   static create({ value }: TicketPriorityProps) {
     return new TicketPriority({ value });
+  }
+
+  static default(): TicketPriority {
+    return new TicketPriority({ value: 'medium' });
   }
 }
