@@ -4,10 +4,7 @@ export interface EmailHeadersProps {
   messageId?: string;
   inReplyTo?: string;
   references?: string[];
-  from?: string;
-  to?: string;
-  subject?: string;
-  date?: string;
+  date?: Date;
 }
 
 export class EmailHeaders extends ValueObject<EmailHeadersProps> {
@@ -19,15 +16,6 @@ export class EmailHeaders extends ValueObject<EmailHeadersProps> {
   }
   get references() {
     return this.props.references ?? [];
-  }
-  get from() {
-    return this.props.from;
-  }
-  get to() {
-    return this.props.to;
-  }
-  get subject() {
-    return this.props.subject;
   }
   get date() {
     return this.props.date;

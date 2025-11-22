@@ -1,6 +1,7 @@
 import { Entity } from '@/core/entities/entity';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import { EmailHeaders } from '../value-objects/email-headers';
+import { EmailBody } from '../value-objects/email-body';
 
 interface Attachment {}
 
@@ -9,8 +10,7 @@ export interface MessageProps {
   providerMessageId?: string;
   authorType: 'reporter' | 'agent' | 'system';
   authorId: string;
-  bodyRaw?: string;
-  bodyPlain: string;
+  emailBody: EmailBody;
   headers?: EmailHeaders | null;
   attachments?: Attachment[];
   editedAt?: Date;
@@ -33,10 +33,10 @@ export class Message extends Entity<MessageProps> {
     return this.props.authorId;
   }
   get bodyRaw() {
-    return this.props.bodyRaw;
+    return this.props.emailBody.bodyRaw;
   }
   get bodyPlain() {
-    return this.props.bodyPlain;
+    return this.props.emailBody.bodyPlain;
   }
   get headers() {
     return this.props.headers;
@@ -66,8 +66,7 @@ export class Message extends Entity<MessageProps> {
         ticketId: _props.ticketId,
         authorType: _props.authorType ?? 'reporter',
         authorId: _props.authorId,
-        bodyRaw: _props.bodyRaw,
-        bodyPlain: _props.bodyPlain,
+        emailBody: _props.emailBody,
         headers: (_props.headers ?? null) as EmailHeaders | null,
         direction: _props.direction,
         providerMessageId: _props.providerMessageId,

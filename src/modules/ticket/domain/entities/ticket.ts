@@ -3,6 +3,8 @@ import { TicketStatus } from '../value-objects/ticket-status';
 import { EmailReplyAddress } from '../value-objects/email-reply-address';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import { Message } from './message';
+import { EmailBody } from '../value-objects/email-body';
+import { EmailHeaders } from '../value-objects/email-headers';
 import { Either, left, right } from '@/core/either';
 import { TickedClosedError } from '@/core/errors/ticket-closed.error';
 import { InvalidTransitionError } from '@/core/errors/invalid-transition.error';
@@ -18,10 +20,11 @@ import { MessageAddedEvent } from '../events/message-added.event';
 export interface TicketProps {
   tenantId: string;
   subject: string;
-  customerId: string;
+  customer: Customer;
   reporterEmail: string;
   status: TicketStatus;
   replyAddress: EmailReplyAddress;
+  tagIds: string[];
   messageCount: number;
   assigneeId?: string;
   assignedAt?: Date;
@@ -63,7 +66,15 @@ export class Ticket extends TenantEntity<TicketProps> {
   }
 
   get assigneeId() {
+    return this.props.assigneeId;
+  }
+
+  get assignedAt() {
     return this.props.assignedAt;
+  }
+
+  get customer() {
+    return this.props.customer;
   }
 
   get isAssigned(): boolean {
@@ -102,24 +113,24 @@ export class Ticket extends TenantEntity<TicketProps> {
       return left(new InactiveAgentError());
     }
 
-    const previousAssignee = this.props.assigneeId
+    const previousAssignee = this.props.assigneeId;
 
     this.props.assigneeId = agent.id.toString();
     this.props.assignedAt = new Date();
     this.touch();
 
     this._domainEvents.push(
-      new TicketAssignedEvent(this, agent, previousAssignee)
-    )
+      new TicketAssignedEvent(this, agent, previousAssignee),
+    );
 
-    return right(undefined)
+    return right(undefined);
   }
 
   addMessage(
-    content: string,
+    content: EmailBody,
     author: MessageAuthor,
+    headers?: EmailHeaders,
   ): Either<TickedClosedError, Message> {
-
     if (this.status.isClosed()) {
       return left(new TickedClosedError());
     }
@@ -127,7 +138,8 @@ export class Ticket extends TenantEntity<TicketProps> {
       ticketId: this.id.toString(),
       authorType: author.type,
       authorId: author.id,
-      bodyPlain: content,
+      emailBody: content,
+      headers,
       direction: author.type === 'reporter' ? 'inbound' : 'outbound',
       createdAt: new Date(),
     });
@@ -138,7 +150,7 @@ export class Ticket extends TenantEntity<TicketProps> {
     this.props.lastMessageAt = new Date();
     this.touch();
 
-    this._domainEvents.push(new MessageAddedEvent(this, message))
+    this._domainEvents.push(new MessageAddedEvent(this, message));
 
     return right(message);
   }
