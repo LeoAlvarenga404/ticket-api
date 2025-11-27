@@ -11,6 +11,7 @@ export class AgentRoleChangedEvent implements DomainEvent {
     public readonly oldRole: AgentRole | null,
     public readonly newRole: AgentRole,
     public readonly changedBy: Agent,
+  
   ) {
     this.occurredAt = new Date();
   }

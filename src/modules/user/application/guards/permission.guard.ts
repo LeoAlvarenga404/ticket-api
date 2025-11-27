@@ -8,6 +8,7 @@ export class PermissionGuard {
     agent: Agent,
     permission: Permission,
   ): Either<UnauthorizedError, void> {
+    
     if (!agent.hasPermission(permission)) {
       return left(new UnauthorizedError(`Missing permission: ${permission}`));
     }
