@@ -1,11 +1,12 @@
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
-import { Customer } from '../../domain/entities/customer';
+import { Customer } from '@/modules/customer/domain/entities/customer';
 import { InMemoryTicketsRepository } from '../../test/repositories/in-memory-tickets.repository';
 import {
   CreateTicketFromEmailRequest,
   CreateTicketFromEmailUseCase,
 } from './create-ticket-from-email.usecase';
 import { InvalidEmailError } from '@/core/errors/invalid-email.error';
+import { EmailBodyEmptyError } from '@/core/errors/email-body-empty.error';
 
 describe('CreateTicketFromEmailUseCase', () => {
   let ticketRepository: InMemoryTicketsRepository;
@@ -57,6 +58,7 @@ describe('CreateTicketFromEmailUseCase', () => {
       expect(ticketRepository.items[0]).toBe(ticket);
     }
   });
+
   it('should not be able to create a ticket with an invalid email', async () => {
     const customer = Customer.create(
       {
@@ -75,7 +77,7 @@ describe('CreateTicketFromEmailUseCase', () => {
       subject: 'example subject',
       customer,
       bodyPlain: 'body plain example',
-      bodyRaw: '<p>body plain example</p>',
+      bodyRaw: '<body><div><p>body plain example</p></div></body>',
       headers: {},
     };
 
@@ -84,5 +86,32 @@ describe('CreateTicketFromEmailUseCase', () => {
     expect(result.isLeft()).toBe(true);
     expect(result.value).toBeInstanceOf(InvalidEmailError);
     expect(ticketRepository.items).toHaveLength(0);
+  });
+
+  it('should not be able to create a ticket with an empty body', async () => {
+    const customer = Customer.create(
+      {
+        tenantId: 'tenant-01',
+        name: 'John Doe',
+        email: 'johndoe@email.com',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+      new UniqueEntityID('customer-1'),
+    );
+    const request: CreateTicketFromEmailRequest = {
+      tenantId: 'tenant-01',
+      fromEmail: 'joendoe@email.com',
+      subject: 'example subject',
+      customer,
+      bodyPlain: '',
+      bodyRaw: '<body><div><p></p></div></body>',
+      headers: {},
+    };
+
+    const response = await sut.execute(request);
+
+    expect(response.isLeft()).toBe(true);
+    expect(response.value).toBeInstanceOf(EmailBodyEmptyError);
   });
 });

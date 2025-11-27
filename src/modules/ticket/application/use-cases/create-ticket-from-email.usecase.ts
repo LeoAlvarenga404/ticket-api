@@ -9,7 +9,7 @@ import { EmailBody } from '../../domain/value-objects/email-body';
 import { Ticket } from '../../domain/entities/ticket';
 import { TicketStatus } from '../../domain/value-objects/ticket-status';
 import { EmailReplyAddress } from '../../domain/value-objects/email-reply-address';
-import { Customer } from '../../domain/entities/customer';
+import { Customer } from '@/modules/customer/domain/entities/customer';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import { InvalidEmailError } from '@/core/errors/invalid-email.error';
 import { TickedClosedError } from '@/core/errors/ticket-closed.error';
