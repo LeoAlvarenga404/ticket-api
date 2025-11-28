@@ -101,6 +101,11 @@ export class User extends Entity<UserProps> {
     this.touch();
   }
 
+  updateLastLogin(): void {
+    this.props.lastLoginAt = new Date();
+    this.touch();
+  }
+
   static create(props: UserProps) {
     return new User({
       ...props,
