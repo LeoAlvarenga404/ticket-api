@@ -14,6 +14,8 @@ export enum Permission {
   TICKET_DELETE = 'ticket.delete',
   TICKET_ASSIGN = 'ticket.assign',
   TICKET_CLOSE = 'ticket.close',
+
+  AGENT_MANAGE_ROLES = 'agent.manage.roles',
 }
 
 export interface AgentRoleProps {
@@ -30,6 +32,7 @@ export class AgentRole extends ValueObject<AgentRoleProps> {
       Permission.TICKET_DELETE,
       Permission.TICKET_ASSIGN,
       Permission.TICKET_CLOSE,
+      Permission.AGENT_MANAGE_ROLES,
     ],
     [AgentRoles.AGENT]: [
       Permission.TICKET_VIEW_ALL,
