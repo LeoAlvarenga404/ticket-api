@@ -49,11 +49,15 @@ export class CreateUserUseCase {
 
     const passwordHash = await Password.create(password, this.passwordHasher);
 
+    if (passwordHash.isLeft()) {
+      return left(new WeakPasswordError(passwordHash.value));
+    }
+
     const user = User.create({
       name,
       email: validateEmail.value.value,
-      passwordHash: passwordHash.value,
-      isEmailVerified: false,
+      passwordHash: passwordHash.value.value,
+      emailVerifiedAt: null,
       createdAt: new Date(),
       updatedAt: new Date(),
     });

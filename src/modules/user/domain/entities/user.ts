@@ -5,13 +5,17 @@ import { DomainEvent } from '@/core/events/domain-event';
 import { Either, left, right } from '@/core/either';
 import { AgentProfile } from '../value-objects/agent-profile';
 import { UserPromotedToAgentEvent } from '../events/user-promoted-to-agent.event';
+import { PasswordChangedEvent } from '../events/password-changed.event';
+import { UniqueEntityID } from '@/core/entities/unique-entity-id';
+import { EmailAddress } from '@/modules/ticket/domain/value-objects/email-address';
+import { UserCreatedEvent } from '../events/user-created.event';
 
 interface UserProps {
   name: string;
   email: string;
   passwordHash: string;
   agentProfile?: AgentProfile;
-  isEmailVerified: boolean;
+  emailVerifiedAt: Date | null;
   lastLoginAt?: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -33,8 +37,40 @@ export class User extends Entity<UserProps> {
     return this.props.agentProfile;
   }
 
+  get emailVerifiedAt() {
+    return this.props.emailVerifiedAt;
+  }
+
+  get lastLoginAt() {
+    return this.props.lastLoginAt;
+  }
+
+  get createdAt() {
+    return this.props.createdAt;
+  }
+
+  get updatedAt() {
+    return this.props.updatedAt;
+  }
+
   get isAgent(): boolean {
     return !!this.props.agentProfile;
+  }
+
+  get isEmailVerified() {
+    return !!this.props.emailVerifiedAt;
+  }
+
+  get domainEvents(): readonly DomainEvent[] {
+    return this._domainEvents;
+  }
+
+  private touch() {
+    this.props.updatedAt = new Date();
+  }
+
+  clearEvents() {
+    this._domainEvents = [];
   }
 
   promoteToAgent(tenantId: string, role: AgentRole): Either<Error, void> {
@@ -55,49 +91,77 @@ export class User extends Entity<UserProps> {
     return right(undefined);
   }
 
-  get isEmailVerified() {
-    return this.props.isEmailVerified;
-  }
+  remoteFromAgent(): Either<Error, void> {
+    if (!this.isAgent) {
+      return left(new Error('User is not an agent'));
+    }
 
-  get lastLoginAt() {
-    return this.props.lastLoginAt;
-  }
+    this.props.agentProfile = undefined;
+    this.touch();
 
-  get createdAt() {
-    return this.props.createdAt;
-  }
-
-  get updatedAt() {
-    return this.props.updatedAt;
-  }
-
-  get domainEvents(): readonly DomainEvent[] {
-    return this._domainEvents;
-  }
-
-  clearEvents() {
-    this._domainEvents = [];
-  }
-
-  private touch() {
-    this.props.updatedAt = new Date();
+    return right(undefined);
   }
 
   async verifyPassword(
-    password: string,
+    plainPassword: string,
     hasher: PasswordHasher,
-  ): Promise<boolean> {
-    const passwordVO = Password.fromHashed(this.props.passwordHash);
-    return passwordVO.compare(password, hasher);
+  ): Promise<Either<'INVALID', true>> {
+    const password = Password.fromHashed(this.props.passwordHash);
+    const isValid = await password.compare(plainPassword, hasher);
+
+    if (!isValid) {
+      return left('INVALID');
+    }
+
+    return right(true);
   }
 
-  changePassword(newPasswordHash: string): void {
-    this.props.passwordHash = newPasswordHash;
+  async changePassword(
+    currentPassword: string,
+    newPassword: string,
+    hasher: PasswordHasher,
+  ): Promise<Either<'INVALID_CURRENT_PASSWORD' | 'WEAK_NEW_PASSWORD', void>> {
+    const currentValid = await this.verifyPassword(currentPassword, hasher);
+
+    if (currentValid.isLeft()) {
+      return left('INVALID_CURRENT_PASSWORD');
+    }
+
+    const newPasswordResult = await Password.create(newPassword, hasher);
+
+    if (newPasswordResult.isLeft()) {
+      return left('WEAK_NEW_PASSWORD');
+    }
+
+    this.props.passwordHash = newPasswordResult.value.value;
     this.touch();
+
+    this._domainEvents.push(new PasswordChangedEvent(this));
+    return right(undefined);
+  }
+
+  async resetPassword(
+    newPassword: string,
+    hasher: PasswordHasher,
+  ): Promise<Either<'WEAK_PASSWORD', void>> {
+    const newPasswordResult = await Password.create(newPassword, hasher);
+
+    if (newPasswordResult.isLeft()) {
+      return left('WEAK_PASSWORD');
+    }
+
+    this.props.passwordHash = newPasswordResult.value.value;
+    this.touch();
+
+    this._domainEvents.push(new PasswordChangedEvent(this));
+
+    return right(undefined);
   }
 
   verifyEmail(): void {
-    this.props.isEmailVerified = true;
+    if (this.isEmailVerified) return;
+
+    this.props.emailVerifiedAt = new Date();
     this.touch();
   }
 
@@ -106,10 +170,45 @@ export class User extends Entity<UserProps> {
     this.touch();
   }
 
-  static create(props: UserProps) {
-    return new User({
-      ...props,
-      agentProfile: props.agentProfile ?? undefined,
+  static async createNew(
+    props: {
+      name: string;
+      email: string;
+      password: string;
+    },
+    hasher: PasswordHasher,
+  ): Promise<Either<'INVALID_EMAIL' | 'WEAK_PASSWORD', User>> {
+    const emailResult = EmailAddress.create(props.email);
+
+    if (emailResult.isLeft()) {
+      return left('INVALID_EMAIL');
+    }
+
+    const passwordResult = await Password.create(props.password, hasher);
+    if (passwordResult.isLeft()) {
+      return left('WEAK_PASSWORD');
+    }
+
+    const user = new User({
+      name: props.name.trim(),
+      email: emailResult.value.value,
+      passwordHash: passwordResult.value.value,
+      emailVerifiedAt: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
+
+    user._domainEvents.push(new UserCreatedEvent(user));
+
+    return right(user);
+  }
+
+  static create(props: UserProps, id?: UniqueEntityID): User {
+    return new User(
+      {
+        ...props,
+      },
+      id,
+    );
   }
 }
