@@ -1,5 +1,5 @@
 import { TenantEntity } from '@/core/entities/tenant-entity';
-import { TicketStatus } from '../value-objects/ticket-status';
+import { StatusProps, TicketStatus } from '../value-objects/ticket-status';
 import { EmailReplyAddress } from '../value-objects/email-reply-address';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 import { Message } from './message';
@@ -16,6 +16,7 @@ import { TenantMismatchError } from '@/core/errors/tenant-mismatch.error';
 import { InactiveAgentError } from '@/core/errors/inactive-agent.error';
 import { TicketAssignedEvent } from '../events/ticket-assigned.event';
 import { MessageAddedEvent } from '../events/message-added.event';
+import { TicketStatusChangedEvent } from '../events/ticket-status-changed.event';
 
 export interface TicketProps {
   tenantId: string;
@@ -28,6 +29,7 @@ export interface TicketProps {
   messageCount: number;
   assigneeId?: string;
   assignedAt?: Date;
+  closedAt?: Date;
   lastMessageAt?: Date;
   createdAt: Date;
   updatedAt?: Date;
@@ -83,6 +85,9 @@ export class Ticket extends TenantEntity<TicketProps> {
 
   get lastMessageAt() {
     return this.props.lastMessageAt;
+  }
+  get closedAt() {
+    return this.props.closedAt;
   }
 
   get createdAt() {
@@ -153,6 +158,41 @@ export class Ticket extends TenantEntity<TicketProps> {
     this._domainEvents.push(new MessageAddedEvent(this, message));
 
     return right(message);
+  }
+
+  changeStatus(
+    newStatus: StatusProps,
+    changedByAgentId: string,
+  ): Either<InvalidTransitionError, void> {
+    const oldStatus = this.props.status;
+    const transitionResult = this.props.status.transitionTo(newStatus);
+
+    if (transitionResult.isLeft()) {
+      return left(transitionResult.value);
+    }
+
+    this.props.status = transitionResult.value;
+
+    if (newStatus === 'resolved' || newStatus === 'closed') {
+      this.props.closedAt = new Date();
+    }
+
+    if (oldStatus.isClosed() && newStatus === 'open') {
+      this.props.closedAt = undefined;
+    }
+
+    this.touch();
+
+    this._domainEvents.push(
+      new TicketStatusChangedEvent(
+        this,
+        oldStatus,
+        this.props.status,
+        changedByAgentId,
+      ),
+    );
+
+    return right(undefined);
   }
 
   close(): Either<InvalidTransitionError, void> {
