@@ -1,5 +1,5 @@
 export class WeakPasswordError extends Error {
-  constructor() {
-    super('Weak password.');
+  constructor(value: string) {
+    super(value ?? 'Weak password.');
   }
 }
