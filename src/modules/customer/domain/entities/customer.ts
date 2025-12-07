@@ -1,7 +1,7 @@
 import { TenantEntity } from '@/core/entities/tenant-entity';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
-interface CustomerProps {
+export interface CustomerProps {
   tenantId: string;
   name: string;
   email: string;
@@ -26,12 +26,12 @@ export class Customer extends TenantEntity<CustomerProps> {
     return this.props.updatedAt;
   }
 
-  set name(name: string) {
+  changeName(name: string) {
     this.props.name = name;
     this.touch();
   }
 
-  set email(email: string) {
+  changeEmail(email: string) {
     this.props.email = email;
     this.touch();
   }
