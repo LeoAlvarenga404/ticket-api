@@ -1,6 +1,6 @@
 import { DomainEvent } from '@/core/events/domain-event';
 import { Ticket } from '../entities/ticket';
-import { Agent } from '../entities/agent';
+import { Agent } from '@/modules/user/domain/entities/agent';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
 export class TicketAssignedEvent implements DomainEvent {

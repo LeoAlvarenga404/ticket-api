@@ -1,8 +1,8 @@
 import { DomainEvent } from '@/core/events/domain-event';
 import { Ticket } from '../entities/ticket';
 import { TicketStatus } from '../value-objects/ticket-status';
-import { Customer } from '../entities/customer';
-import { Agent } from '../entities/agent';
+import { Customer } from '@/modules/customer/domain/entities/customer';
+import { Agent } from '@/modules/user/domain/entities/agent';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
 export class TicketStatusChangedEvent implements DomainEvent {

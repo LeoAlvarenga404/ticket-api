@@ -1,8 +1,8 @@
 import { DomainEvent } from '@/core/events/domain-event';
 import { Ticket } from '../entities/ticket';
-import { Agent } from '../entities/agent';
+import { Agent } from '@/modules/user/domain/entities/agent';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
-import { Customer } from '../entities/customer';
+import { Customer } from '@/modules/customer/domain/entities/customer';
 
 export class TicketReopenedEvent implements DomainEvent {
   public occurredAt: Date;

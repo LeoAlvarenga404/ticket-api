@@ -1,5 +1,5 @@
 import { DomainEvent } from '@/core/events/domain-event';
-import { Agent } from '../entities/agent';
+import { Agent } from '@/modules/user/domain/entities/agent';
 import { Ticket } from '../entities/ticket';
 import { UniqueEntityID } from '@/core/entities/unique-entity-id';
 
