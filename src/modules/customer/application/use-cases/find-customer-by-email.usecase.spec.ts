@@ -7,7 +7,7 @@ import { CustomerNotFoundError } from '@/core/errors/customer-not-found.error';
 let customersRepository: InMemoryCustomersRepository;
 let sut: FindCustomerByEmailUseCase;
 
-describe('Fin Customer By Email', () => {
+describe('Find Customer By Email', () => {
   beforeEach(() => {
     customersRepository = new InMemoryCustomersRepository();
     sut = new FindCustomerByEmailUseCase(customersRepository);

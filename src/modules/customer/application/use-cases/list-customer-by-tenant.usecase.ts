@@ -8,7 +8,7 @@ export interface ListCustomersByTenantUseCaseRequest {
 }
 
 export type ListCustomersByTenantUseCaseResponse = Either<
-  CustomerNotFoundError,
+  null,
   {
     customers: Customer[];
   }
@@ -21,11 +21,6 @@ export class ListCustomerByTenantUseCase {
     tenantId,
   }: ListCustomersByTenantUseCaseRequest): Promise<ListCustomersByTenantUseCaseResponse> {
     const customers = await this.customerRepository.listByTenant(tenantId);
-
-    if (customers.length <= 0) {
-      left(new CustomerNotFoundError());
-    }
-
     return right({ customers });
   }
 }

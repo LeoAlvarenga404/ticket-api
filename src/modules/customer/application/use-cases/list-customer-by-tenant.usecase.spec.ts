@@ -1,3 +1,4 @@
+import { CustomerNotFoundError } from '@/core/errors/customer-not-found.error';
 import { Customer } from '../../domain/entities/customer';
 import { InMemoryCustomersRepository } from '../../test/repositories/in-memory-customers.repository';
 import { ListCustomerByTenantUseCase } from './list-customer-by-tenant.usecase';
@@ -46,8 +47,7 @@ describe('List Customer By Tenant', () => {
     expect(response.isRight()).toBe(true);
 
     if (response.isRight()) {
-      expect(response.value.customers).toHaveLength(2)
+      expect(response.value.customers).toHaveLength(2);
     }
-
   });
 });
