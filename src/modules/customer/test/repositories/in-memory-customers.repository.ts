@@ -29,4 +29,14 @@ export class InMemoryCustomersRepository implements CustomersRepository {
       this.items.push(user);
     }
   }
+
+  async delete(customerId: string, tenandId: string): Promise<void> {
+    const index = this.items.findIndex(
+      (t) =>
+        t.id.toString() === customerId.toString() && t.tenantId === tenandId,
+    );
+    if (index >= 0) {
+      this.items.splice(index, 1);
+    }
+  }
 }
