@@ -95,7 +95,7 @@ export class Agent extends TenantEntity<AgentProps> {
       return;
     }
 
-    this.props.isActive = false;
+    this.props.isActive = true;
     this.touch();
 
     this._domainEvents.push(new AgentActivatedEvent(this, activatedBy));

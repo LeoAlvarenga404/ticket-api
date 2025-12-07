@@ -1,18 +1,18 @@
 import { Either, left, right } from '@/core/either';
 import { Customer } from '../../domain/entities/customer';
 import { CustomersRepository } from '../../domain/repositories/customers.repository';
-import { EmailAddress } from '@/modules/ticket/domain/value-objects/email-address';
+import { EmailAddress } from '../value-objects/email-address';
 import { InvalidEmailError } from '@/core/errors/invalid-email.error';
 import { CustomerAlreadyExistsError } from '@/core/errors/customer-already-exists.error';
 
 export interface CreateCustomerRequest {
   tenantId: string;
-  name: string;
+  name?: string;
   email: string;
 }
 
 export type CreateCustomerResponse = Either<
-  InvalidEmailError,
+  InvalidEmailError | CustomerAlreadyExistsError,
   {
     customer: Customer;
   }
@@ -45,7 +45,7 @@ export class CreateCustomerUseCase {
 
     customer = Customer.create({
       tenantId,
-      name: name?.trim(),
+      name: name?.trim() ?? 'New Customer',
       email: emailOrError.value.value,
       createdAt: new Date(),
       updatedAt: new Date(),

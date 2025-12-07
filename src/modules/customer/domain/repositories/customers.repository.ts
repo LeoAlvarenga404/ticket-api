@@ -7,4 +7,5 @@ export abstract class CustomersRepository {
     email: string,
     tenantId: string,
   ): Promise<Customer | null>;
+  abstract listByTenant(tenantId: string): Promise<Customer[]>;
 }

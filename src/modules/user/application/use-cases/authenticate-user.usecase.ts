@@ -1,5 +1,5 @@
 import { Either, left, right } from '@/core/either';
-import { EmailNotVerifiedError } from '@/core/errors/email-not-verified.error copy';
+import { EmailNotVerifiedError } from '@/core/errors/email-not-verified.error';
 import { InvalidCredentialsError } from '@/core/errors/invalid-credentials.error';
 import { User } from '../../domain/entities/user';
 import { UsersRepository } from '../../domain/repositories/users.repository';
